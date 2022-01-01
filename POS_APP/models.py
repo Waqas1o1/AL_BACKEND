@@ -1,3 +1,4 @@
+from datetime import time
 from django.db import models
 from django.utils import timezone
 from .utils.utils import UpdateLeadgers, DeleteLeadgers
@@ -299,20 +300,19 @@ class SalesOfficerLedger(Ledger):
 
 
 class Purchase(models.Model):
-    sales_officer = models.ForeignKey(SalesOfficer, on_delete=models.CASCADE)
     vender = models.ForeignKey(Vender, on_delete=models.CASCADE)
     total_amount = models.FloatField()
     transaction_type = models.CharField(
         max_length=5, choices=(('Bank', 'Bank'), ('Cash', 'Cash')))
     description = models.TextField(blank=True, default='Not Set')
     status = models.CharField(max_length=20, choices=(
-        ('Pending', 'Pending'), ('Arrived', 'Arrived')))
+        ('Pending', 'Pending'), ('Arrived', 'Arrived')),default='Pending')
     qty_remaining = models.IntegerField(blank=True, default=0)
-
-    vl = models.ForeignKey(VenderLedger, on_delete=models.CASCADE)
-    cl = models.ForeignKey(CashLedger, on_delete=models.CASCADE)
-    bl = models.ForeignKey(BankLedger, on_delete=models.CASCADE)
-
+    bank = models.ForeignKey(Bank, on_delete=models.CASCADE,null=True,blank=True)
+    vl = models.ForeignKey(VenderLedger, on_delete=models.CASCADE,null=True,blank=True)
+    cl = models.ForeignKey(CashLedger, on_delete=models.CASCADE,null=True,blank=True)
+    bl = models.ForeignKey(BankLedger, on_delete=models.CASCADE,null=True,blank=True)
+    date = models.DateTimeField(default=timezone.now)
 
 class PurchaseProducts(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)

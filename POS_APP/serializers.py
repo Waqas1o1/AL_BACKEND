@@ -31,6 +31,15 @@ class ProductSerializer(serializers.ModelSerializer):
         model = m.Product
         fields = '__all__'
 
+class PurchaseProductsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.PurchaseProducts
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['product'] = ProductSerializer(instance.product).data
+        return response
 # Ledgers Serializers
 
 
@@ -73,6 +82,7 @@ class PartyLedgerSerializer(serializers.ModelSerializer):
         response['party'] = PartySerializer(instance.party).data
         return response
 
+
 # UI
 
 
@@ -84,7 +94,10 @@ class PurchaseSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         response = super().to_representation(instance)
         response['vender'] = VenderSerializer(instance.vender).data
-        response['sales_officer'] = SalesOfficerSerializer(
-            instance.sales_officer).data
-
+        response['bank'] = BankSerializer(instance.bank).data
+        products = []
+        for i in m.PurchaseProducts.objects.filter(purchas=instance):
+            products.append(i)
+        
+        response['products'] = PurchaseProductsSerializer(products,many=True).data
         return response

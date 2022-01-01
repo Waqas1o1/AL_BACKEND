@@ -8,6 +8,8 @@ router.register('SalesOfficer', SalesOfficerViewset, basename='SalesOfficer')
 router.register('Vender', VenderViewset, basename='Vender')
 router.register('Bank', BankViewset, basename='Bank')
 router.register('Product', ProductViewset, basename='Product')
+# Majore
+router.register('Purchase', PurchaseViewset, basename='Purchase')
 
 
 

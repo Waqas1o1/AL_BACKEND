@@ -13,7 +13,7 @@ SECRET_KEY = 'django-insecure-@j_&+1^a^#f13gq4gw+3y4bjdcz5ig78zv8%+oaj&p8+tzf@9j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['alhadi-apis.herokuapp.com']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition

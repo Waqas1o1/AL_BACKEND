@@ -56,7 +56,8 @@ class PartyViewset(viewsets.ViewSet):
 class SalesOfficerViewset(viewsets.ViewSet):
     def list(self, request):
         query_set = m.SalesOfficer.objects.all()
-        serializer = s.SalesOfficerSerializer(query_set, many=True, context={'request': request})
+        serializer = s.SalesOfficerSerializer(
+            query_set, many=True, context={'request': request})
         context = {'data': serializer.data}
         return Response(context)
 
@@ -229,4 +230,60 @@ class ProductViewset(viewsets.ViewSet):
 
     def delete(self, request, pk=None):
         m.Product.objects.get(id=pk).delete()
+        return Response({'error': False, 'message': 'Data Deleted Successfully!'})
+
+
+class PurchaseViewset(viewsets.ViewSet):
+
+    def list(self, request):
+        query_set = m.Purchase.objects.all()
+        serializer = s.PurchaseSerializer(
+            query_set, many=True, context={'request': request})
+        context = {'data': serializer.data}
+        return Response(context)
+
+    def create(self, request):
+        serializer = s.PurchaseSerializer(data=request.data, context={'request': request})
+        serializer.is_valid()
+        if serializer.errors:
+            context = {"error": True, 'message': serializer.errors}
+        else:
+            products = request.data['products']
+            obj = serializer.save()
+            purchases_pdt_objs = [m.PurchaseProducts(purchas=obj, product=m.Product.objects.get(
+                particular=pdt['particular']), rate=pdt['rate'], qty=pdt['qty']) for pdt in products]
+            m.PurchaseProducts.objects.bulk_create(purchases_pdt_objs)
+            
+            context = {'error': False, 'message': 'Data Saved Succesfully!'}
+        return Response(context)
+
+    def retrieve(self, request, pk=None):
+        query_set = m.Purchase.objects.all()
+        Purchase = get_object_or_404(query_set, pk=pk)
+        serializer = s.PurchaseSerializer(
+            Purchase, context={'request': request})
+        context = {'data': serializer.data}
+        return Response(context)
+
+    def update(self, request, pk=None):
+        query_set = m.Purchase.objects.all()
+        Purchase = get_object_or_404(query_set, pk=pk)
+        serializer = s.PurchaseSerializer(
+            Purchase, data=request.data,  context={'request': request})
+        serializer.is_valid()
+        if serializer.errors:
+            context = {"error": True, 'message': serializer.errors}
+        else:
+            obj = serializer.save()
+            m.PurchaseProducts.objects.filter(purchas=obj).delete()
+            products = request.data['products']
+            purchases_pdt_objs = [m.PurchaseProducts(purchas=obj, product=m.Product.objects.get(
+                particular=pdt['particular']), rate=pdt['rate'], qty=pdt['qty']) for pdt in products]
+            m.PurchaseProducts.objects.bulk_create(purchases_pdt_objs)
+
+            context = {"error": False, 'message': 'Success Fully Saved'}
+        return Response(context)
+
+    def delete(self, request, pk=None):
+        m.Purchase.objects.get(id=pk).delete()
         return Response({'error': False, 'message': 'Data Deleted Successfully!'})
