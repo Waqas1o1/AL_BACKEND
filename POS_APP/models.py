@@ -67,6 +67,8 @@ class Vender(models.Model):
     email = models.EmailField(blank=True, null=True)
     attachments = models.FileField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
+    opening_Balance = models.FloatField()
+    current_Balance = models.FloatField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -225,21 +227,21 @@ class PartyLedger(Ledger):
 
 
 class VenderLedger(Ledger):
-    sales_officer = models.ForeignKey(Vender, on_delete=models.CASCADE)
+    vender = models.ForeignKey(Vender, on_delete=models.CASCADE)
     purchases = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return self.sales_officer.name + str(self.id)
+        return self.vender.name + str(self.id)
 
     def save(self, *args, **kwargs):
         if self.id == None:
             if self.transaction_type == 'Credit':
-                self.sales_officer.current_Balance -= self.total_amount
-                self.net_balance = self.sales_officer.current_Balance
+                self.vender.current_Balance -= self.total_amount
+                self.net_balance = self.vender.current_Balance
             else:
-                self.sales_officer.current_Balance += self.total_amount
-                self.net_balance = self.sales_officer.current_Balance
-            self.sales_officer.save()
+                self.vender.current_Balance += self.total_amount
+                self.net_balance = self.vender.current_Balance
+            self.vender.save()
 
             super(VenderLedger, self).save(*args, **kwargs)
         else:
@@ -298,7 +300,6 @@ class SalesOfficerLedger(Ledger):
 
 # UI
 
-
 class Purchase(models.Model):
     vender = models.ForeignKey(Vender, on_delete=models.CASCADE)
     total_amount = models.FloatField()
@@ -319,6 +320,33 @@ class PurchaseProducts(models.Model):
     qty = models.IntegerField()
     rate = models.IntegerField()
     purchas = models.ForeignKey(Purchase, on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return self.product.particular
+
+class Sales(models.Model):
+    party = models.ForeignKey(Party, on_delete=models.CASCADE)
+    salesOfficer = models.ForeignKey(SalesOfficer, on_delete=models.SET_NULL,null=True)
+    total_amount = models.FloatField()
+    unloading = models.FloatField(blank=True,null=True)
+    freight = models.FloatField(blank=True,null=True)
+    total_amount = models.FloatField()
+    status = models.CharField(max_length=20, choices=(
+        ('Pending', 'Pending'), ('Delivered', 'Delivered')),default='Pending')
+    transaction_type = models.CharField(
+        max_length=5, choices=(('Bank', 'Bank'), ('Cash', 'Cash')))
+    description = models.TextField(blank=True, default='Not Set')
+    bank = models.ForeignKey(Bank, on_delete=models.CASCADE,null=True,blank=True)
+    ll = models.ForeignKey(PartyLedger, on_delete=models.CASCADE,null=True,blank=True)
+    cl = models.ForeignKey(CashLedger, on_delete=models.CASCADE,null=True,blank=True)
+    bl = models.ForeignKey(BankLedger, on_delete=models.CASCADE,null=True,blank=True)
+    date = models.DateTimeField(default=timezone.now)
+
+class SalesProducts(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    qty = models.IntegerField()
+    rate = models.IntegerField()
+    sales = models.ForeignKey(Sales, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
         return self.product.particular

@@ -31,6 +31,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = m.Product
         fields = '__all__'
 
+
 class PurchaseProductsSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.PurchaseProducts
@@ -40,6 +41,19 @@ class PurchaseProductsSerializer(serializers.ModelSerializer):
         response = super().to_representation(instance)
         response['product'] = ProductSerializer(instance.product).data
         return response
+
+
+class SalesProductsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.SalesProducts
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['product'] = ProductSerializer(instance.product).data
+        return response
+
+
 # Ledgers Serializers
 
 
@@ -50,7 +64,6 @@ class VenderLedgerSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
-        response['purchase'] = PurchaseSerializer(instance.purchase).data
         response['vender'] = VenderSerializer(instance.vender).data
         return response
 
@@ -83,6 +96,17 @@ class PartyLedgerSerializer(serializers.ModelSerializer):
         return response
 
 
+class SalesOfficerLedgerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.SalesOfficerLedger
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['sales_officer'] = SalesOfficerSerializer(
+            instance.sales_officer).data
+        return response
+
 # UI
 
 
@@ -95,9 +119,24 @@ class PurchaseSerializer(serializers.ModelSerializer):
         response = super().to_representation(instance)
         response['vender'] = VenderSerializer(instance.vender).data
         response['bank'] = BankSerializer(instance.bank).data
-        products = []
-        for i in m.PurchaseProducts.objects.filter(purchas=instance):
-            products.append(i)
-        
-        response['products'] = PurchaseProductsSerializer(products,many=True).data
+        products = m.PurchaseProducts.objects.filter(purchas=instance)
+        response['products'] = PurchaseProductsSerializer(
+            products, many=True).data
+        return response
+
+
+class SalesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.Sales
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['party'] = PartySerializer(instance.party).data
+        response['salesOfficer'] = SalesOfficerSerializer(
+            instance.salesOfficer).data
+        response['bank'] = BankSerializer(instance.bank).data
+        products = m.SalesProducts.objects.filter(sales=instance)
+        response['products'] = SalesProductsSerializer(
+            products, many=True).data
         return response

@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from rest_framework import viewsets
+from rest_framework import viewsets,generics
 from rest_framework.response import Response
 from . import serializers as s
 from . import models as m
@@ -24,7 +24,7 @@ class PartyViewset(viewsets.ViewSet):
         else:
             serializer.save()
             context = {'error': False, 'message': 'Data Saved Successfully!'}
-        Response(context)
+        return Response(context)
 
     def retrieve(self, request, pk=None):
         query_set = m.Party.objects.all()
@@ -39,6 +39,7 @@ class PartyViewset(viewsets.ViewSet):
         serializer = s.PartySerializer(
             query_set, data=request.data, context={'request': request})
         serializer.is_valid()
+      
         if serializer.errors:
             context = {"error": True, 'message': serializer.errors}
         else:
@@ -287,3 +288,113 @@ class PurchaseViewset(viewsets.ViewSet):
     def delete(self, request, pk=None):
         m.Purchase.objects.get(id=pk).delete()
         return Response({'error': False, 'message': 'Data Deleted Successfully!'})
+
+
+class SalesViewset(viewsets.ViewSet):
+
+    def list(self, request):
+        query_set = m.Sales.objects.all()
+        serializer = s.SalesSerializer(
+            query_set, many=True, context={'request': request})
+        context = {'data': serializer.data}
+        return Response(context)
+
+    def create(self, request):
+        serializer = s.SalesSerializer(data=request.data, context={'request': request})
+        serializer.is_valid()
+        if serializer.errors:
+            context = {"error": True, 'message': serializer.errors}
+        else:
+            products = request.data['products']
+            obj = serializer.save()
+            Saless_pdt_objs = [m.SalesProducts(sales=obj, product=m.Product.objects.get(
+                particular=pdt['particular']), rate=pdt['rate'], qty=pdt['qty']) for pdt in products]
+            m.SalesProducts.objects.bulk_create(Saless_pdt_objs)
+            
+            context = {'error': False, 'message': 'Data Saved Succesfully!'}
+        return Response(context)
+
+    def retrieve(self, request, pk=None):
+        query_set = m.Sales.objects.all()
+        Sales = get_object_or_404(query_set, pk=pk)
+        serializer = s.SalesSerializer(
+            Sales, context={'request': request})
+        context = {'data': serializer.data}
+        return Response(context)
+
+    def update(self, request, pk=None):
+        query_set = m.Sales.objects.all()
+        Sales = get_object_or_404(query_set, pk=pk)
+        serializer = s.SalesSerializer(
+            Sales, data=request.data,  context={'request': request})
+        serializer.is_valid()
+        if serializer.errors:
+            context = {"error": True, 'message': serializer.errors}
+        else:
+            obj = serializer.save()
+            m.SalesProducts.objects.filter(sales=obj).delete()
+            products = request.data['products']
+            Saless_pdt_objs = [m.SalesProducts(sales=obj, product=m.Product.objects.get(
+                particular=pdt['particular']), rate=pdt['rate'], qty=pdt['qty']) for pdt in products]
+            m.SalesProducts.objects.bulk_create(Saless_pdt_objs)
+
+            context = {"error": False, 'message': 'Success Fully Saved'}
+        return Response(context)
+
+    def delete(self, request, pk=None):
+        m.Sales.objects.get(id=pk).delete()
+        return Response({'error': False, 'message': 'Data Deleted Successfully!'})
+
+# Ledgers
+
+class PartyLedgerFilter(generics.ListAPIView):
+    
+    serializer_class = s.PartyLedgerSerializer
+
+    def get_queryset(self):
+        f_date = self.kwargs['FromDate']
+        t_date = self.kwargs['ToDate']
+        id = self.kwargs['id']
+        ledgers  = m.PartyLedger.objects.filter(party__id=id, date__lte=t_date, date__gte=f_date)
+        print(m.PartyLedger.objects.all())
+        return ledgers
+
+class SalesOfficerLedgerFilter(generics.ListAPIView):
+    
+    serializer_class = s.SalesOfficerLedgerSerializer
+
+    def get_queryset(self):
+        f_date = self.kwargs['FromDate']
+        t_date = self.kwargs['ToDate']
+        id = self.kwargs['id']
+        return m.SalesOfficerLedger.objects.filter(sales_officer__id=id, date__lte=t_date, date__gte=f_date)
+
+class BankLedgerFilter(generics.ListAPIView):
+    
+    serializer_class = s.BankLedgerSerializer
+
+    def get_queryset(self):
+        f_date = self.kwargs['FromDate']
+        t_date = self.kwargs['ToDate']
+        id = self.kwargs['id']
+        return m.BankLedger.objects.filter(bank__id=id, date__lte=t_date, date__gte=f_date)
+
+class CashLedgerFilter(generics.ListAPIView):
+    
+    serializer_class = s.CashLedgerSerializer
+
+    def get_queryset(self):
+        f_date = self.kwargs['FromDate']
+        t_date = self.kwargs['ToDate']
+        return m.CashLedger.objects.filter(date__lte=t_date, date__gte=f_date)
+
+class VenderLedgerFilter(generics.ListAPIView):
+    
+    serializer_class = s.VenderLedgerSerializer
+
+    def get_queryset(self):
+        f_date = self.kwargs['FromDate']
+        t_date = self.kwargs['ToDate']
+        id = self.kwargs['id']
+        return m.VenderLedger.objects.filter(vender__lte=id,date__lte=t_date, date__gte=f_date)
+
