@@ -3,7 +3,8 @@ from rest_framework import viewsets,generics
 from rest_framework.response import Response
 from . import serializers as s
 from . import models as m
-
+from rest_framework.decorators import api_view
+from django.http.response import JsonResponse
 # Create your views here.
 
 
@@ -398,3 +399,24 @@ class VenderLedgerFilter(generics.ListAPIView):
         id = self.kwargs['id']
         return m.VenderLedger.objects.filter(vender__lte=id,date__lte=t_date, date__gte=f_date)
 
+# Ledger
+@api_view(['POST'])
+def RecivedPurchase(request,id):
+    freight = request.data['freight']
+    if freight:
+        p = m.Purchase.objects.get(id=id)
+        p.status ='Arrived'
+        p.freight = freight
+        p.save()
+    send_dict = {'error':False,'message':'Purchased Revied'}
+    return JsonResponse(send_dict)
+@api_view(['POST'])
+def DeliveredSales(request,id):
+    freight = request.data['freight']
+    if freight:
+        p = m.Sales.objects.get(id=id)
+        p.status ='Delivered'
+        p.freight = freight
+        p.save()
+    send_dict = {'error':False,'message':'Purchased Revied'}
+    return JsonResponse(send_dict)

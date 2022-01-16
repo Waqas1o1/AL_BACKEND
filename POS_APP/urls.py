@@ -21,5 +21,8 @@ urlpatterns = [
     path('VenderLedger/<int:id>/<str:FromDate>/<str:ToDate>', VenderLedgerFilter.as_view()),
     path('SalesOfficerLedger/<int:id>/<str:FromDate>/<str:ToDate>', SalesOfficerLedgerFilter.as_view()),
     path('BankLedger/<int:id>/<str:FromDate>/<str:ToDate>', BankLedgerFilter.as_view()),
-    path('CashLedger/<str:FromDate>/<str:ToDate>', CashLedgerFilter.as_view())
+    path('CashLedger/<str:FromDate>/<str:ToDate>', CashLedgerFilter.as_view()),
+    # Actions
+    path('RecivedPurchase/<int:id>/', RecivedPurchase),
+    path('DeliveredSales/<int:id>/', DeliveredSales)
 ]

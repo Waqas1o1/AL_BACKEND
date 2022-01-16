@@ -309,6 +309,7 @@ class Purchase(models.Model):
     status = models.CharField(max_length=20, choices=(
         ('Pending', 'Pending'), ('Arrived', 'Arrived')),default='Pending')
     qty_remaining = models.IntegerField(blank=True, default=0)
+    freight = models.FloatField(blank=True,null=True)
     bank = models.ForeignKey(Bank, on_delete=models.CASCADE,null=True,blank=True)
     vl = models.ForeignKey(VenderLedger, on_delete=models.CASCADE,null=True,blank=True)
     cl = models.ForeignKey(CashLedger, on_delete=models.CASCADE,null=True,blank=True)
